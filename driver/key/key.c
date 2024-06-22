@@ -11,7 +11,7 @@
 #define KEYINPUT_NAME	"keyinput"
 #define KEYINPUT_NUM	4
 
-struct gpio_key_dev{
+struct my_key_dev{
 	struct input_dev *idev;
 	struct timer_list timer;
 	int key[KEYINPUT_NUM];
@@ -19,30 +19,30 @@ struct gpio_key_dev{
 	int index;	
 };
 
-struct gpio_key_dev gpio_key;	
+struct my_key_dev key_dev;	
 
 int key_array[] = {KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN};
 
 static void key_timer_function(struct timer_list *arg)
 {
-	int val = gpio_get_value(gpio_key.key[gpio_key.index]);
-	printk("key_timer_function %d -> %d\n", gpio_key.key[gpio_key.index], val);
+	int val = gpio_get_value(key_dev.key[key_dev.index]);
+	printk("key_timer_function %d -> %d\n", key_dev.key[key_dev.index], val);
 	// if(val == 0) {
-		input_report_key(gpio_key.idev, key_array[gpio_key.index], !val);
-		input_sync(gpio_key.idev);
+		input_report_key(key_dev.idev, key_array[key_dev.index], !val);
+		input_sync(key_dev.idev);
 
-		// input_report_key(gpio_key.idev, key_array[gpio_key.index], 0);
-		// input_sync(gpio_key.idev);
-		// printk("key %d press %d\n", gpio_key.key[gpio_key.index], key_array[gpio_key.index]);
+		// input_report_key(key_dev.idev, key_array[key_dev.index], 0);
+		// input_sync(key_dev.idev);
+		// printk("key %d press %d\n", key_dev.key[key_dev.index], key_array[key_dev.index]);
 	// }
 }
 
 static irqreturn_t key_interrupt0(int irq, void *dev_id)
 {
 	// printk("key_interrupt0 irq %d \n", irq);
-	if(irq == gpio_key.irq[0]) {
-		mod_timer(&gpio_key.timer, jiffies + msecs_to_jiffies(15));
-		gpio_key.index = 0;
+	if(irq == key_dev.irq[0]) {
+		mod_timer(&key_dev.timer, jiffies + msecs_to_jiffies(15));
+		key_dev.index = 0;
 	}
     return IRQ_HANDLED;
 }
@@ -50,9 +50,9 @@ static irqreturn_t key_interrupt0(int irq, void *dev_id)
 static irqreturn_t key_interrupt1(int irq, void *dev_id)
 {
 	// printk("key_interrupt1 irq %d \n", irq);
-	if(irq == gpio_key.irq[1]) {
-		mod_timer(&gpio_key.timer, jiffies + msecs_to_jiffies(15));
-		gpio_key.index = 1;
+	if(irq == key_dev.irq[1]) {
+		mod_timer(&key_dev.timer, jiffies + msecs_to_jiffies(15));
+		key_dev.index = 1;
 	}
     return IRQ_HANDLED;
 }
@@ -60,9 +60,9 @@ static irqreturn_t key_interrupt1(int irq, void *dev_id)
 static irqreturn_t key_interrupt2(int irq, void *dev_id)
 {
 	// printk("key_interrupt2 irq %d \n", irq);
-	if(irq == gpio_key.irq[2]) {
-		mod_timer(&gpio_key.timer, jiffies + msecs_to_jiffies(15));
-		gpio_key.index = 2;
+	if(irq == key_dev.irq[2]) {
+		mod_timer(&key_dev.timer, jiffies + msecs_to_jiffies(15));
+		key_dev.index = 2;
 	}
     return IRQ_HANDLED;
 }
@@ -70,9 +70,9 @@ static irqreturn_t key_interrupt2(int irq, void *dev_id)
 static irqreturn_t key_interrupt3(int irq, void *dev_id)
 {
 	// printk("key_interrupt3 irq %d \n", irq);
-	if(irq == gpio_key.irq[3]) {
-		mod_timer(&gpio_key.timer, jiffies + msecs_to_jiffies(15));
-		gpio_key.index = 3;
+	if(irq == key_dev.irq[3]) {
+		mod_timer(&key_dev.timer, jiffies + msecs_to_jiffies(15));
+		key_dev.index = 3;
 	}
     return IRQ_HANDLED;
 }
@@ -84,63 +84,63 @@ static int __init gpio_key_init(void)
 
 	for(i = 0; i < KEYINPUT_NUM; i++) {
 		// gpio 48 49 50 51
-		gpio_key.key[i] = 48 + i;
+		key_dev.key[i] = 48 + i;
 
 		// request
-		ret = gpio_request(gpio_key.key[i], "LED-GPIO");
+		ret = gpio_request(key_dev.key[i], "LED-GPIO");
 		if (ret) {
-			printk(KERN_ERR "gpio_key: Failed to request led-gpio\n");
+			printk(KERN_ERR "key_dev: Failed to request led-gpio\n");
 			return ret;
 		}
 
 		// input
-		ret = gpio_direction_input(gpio_key.key[i]);
+		ret = gpio_direction_input(key_dev.key[i]);
 		if(ret < 0) {
 			printk("can't set gpio!\r\n");
 		}
 
 		// irq
-		gpio_key.irq[i] = gpio_to_irq(gpio_key.key[i]); 
-		printk("key%d -> irq : %d\n", gpio_key.key[i], gpio_key.irq[i]);
+		key_dev.irq[i] = gpio_to_irq(key_dev.key[i]); 
+		printk("key%d -> irq : %d\n", key_dev.key[i], key_dev.irq[i]);
 		if(i == 0) {
-			ret = request_irq(gpio_key.irq[i], key_interrupt0, IRQF_TRIGGER_FALLING | IRQF_TRIGGER_RISING, "Key0_IRQ", NULL);
+			ret = request_irq(key_dev.irq[i], key_interrupt0, IRQF_TRIGGER_FALLING | IRQF_TRIGGER_RISING, "Key0_IRQ", NULL);
 			if (ret) {
-				gpio_free(gpio_key.key[i]);
+				gpio_free(key_dev.key[i]);
 				return ret;
 			}
 		}
 		else if(i == 1) {
-			ret = request_irq(gpio_key.irq[i], key_interrupt1, IRQF_TRIGGER_FALLING | IRQF_TRIGGER_RISING, "Key1_IRQ", NULL);
+			ret = request_irq(key_dev.irq[i], key_interrupt1, IRQF_TRIGGER_FALLING | IRQF_TRIGGER_RISING, "Key1_IRQ", NULL);
 			if (ret) {
-				gpio_free(gpio_key.key[i]);
+				gpio_free(key_dev.key[i]);
 				return ret;
 			}
 		}
 		else if(i == 2) {
-			ret = request_irq(gpio_key.irq[i], key_interrupt2, IRQF_TRIGGER_FALLING | IRQF_TRIGGER_RISING, "Key2_IRQ", NULL);
+			ret = request_irq(key_dev.irq[i], key_interrupt2, IRQF_TRIGGER_FALLING | IRQF_TRIGGER_RISING, "Key2_IRQ", NULL);
 			if (ret) {
-				gpio_free(gpio_key.key[i]);
+				gpio_free(key_dev.key[i]);
 				return ret;
 			}
 		}
 		else if(i == 3) {
-			ret = request_irq(gpio_key.irq[i], key_interrupt3, IRQF_TRIGGER_FALLING | IRQF_TRIGGER_RISING, "Key3_IRQ", NULL);
+			ret = request_irq(key_dev.irq[i], key_interrupt3, IRQF_TRIGGER_FALLING | IRQF_TRIGGER_RISING, "Key3_IRQ", NULL);
 			if (ret) {
-				gpio_free(gpio_key.key[i]);
+				gpio_free(key_dev.key[i]);
 				return ret;
 			}
 		}
 	}
 
 	// timer
-	timer_setup(&gpio_key.timer, key_timer_function, 0);
+	timer_setup(&key_dev.timer, key_timer_function, 0);
 
 	// input dev
-	gpio_key.idev = input_allocate_device();
-	gpio_key.idev->name = KEYINPUT_NAME;
-	gpio_key.idev->evbit[0] = BIT_MASK(EV_KEY) | BIT_MASK(EV_REP);
-	input_set_capability(gpio_key.idev, EV_KEY, KEY_LEFT | KEY_RIGHT | KEY_UP | KEY_DOWN);
-	ret = input_register_device(gpio_key.idev);
+	key_dev.idev = input_allocate_device();
+	key_dev.idev->name = KEYINPUT_NAME;
+	key_dev.idev->evbit[0] = BIT_MASK(EV_KEY) | BIT_MASK(EV_REP);
+	input_set_capability(key_dev.idev, EV_KEY, KEY_LEFT | KEY_RIGHT | KEY_UP | KEY_DOWN);
+	ret = input_register_device(key_dev.idev);
 	if (ret) {
 		printk("register input device failed!\r\n");
 		goto free_gpio;
@@ -150,12 +150,12 @@ static int __init gpio_key_init(void)
 
 free_gpio:
 	for(i = 0; i < KEYINPUT_NUM; i++) {
-		free_irq(gpio_key.irq[i],NULL);
-		gpio_free(gpio_key.key[i]);
+		free_irq(key_dev.irq[i],NULL);
+		gpio_free(key_dev.key[i]);
 		
 	}
 
-	del_timer_sync(&gpio_key.timer);
+	del_timer_sync(&key_dev.timer);
 	return -EIO;
 }
 
@@ -163,12 +163,12 @@ static void __exit gpio_key_exit(void)
 {
 	int i;
 	for(i = 0; i < KEYINPUT_NUM; i++) {
-		free_irq(gpio_key.irq[i],NULL);
-		gpio_free(gpio_key.key[i]);
+		free_irq(key_dev.irq[i],NULL);
+		gpio_free(key_dev.key[i]);
 	}
 
-	del_timer_sync(&gpio_key.timer);
-	input_unregister_device(gpio_key.idev);	
+	del_timer_sync(&key_dev.timer);
+	input_unregister_device(key_dev.idev);	
 }
 
 module_init(gpio_key_init);
