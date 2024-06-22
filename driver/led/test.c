@@ -7,14 +7,11 @@
 #include "string.h"
 #include "time.h"
 
-#define LEDOFF 	0
-#define LEDON 	1
-
 int main(int argc, char *argv[])
 {
-    int fd, retvalue;
+    int fd, ret;
     char *filename;
-    unsigned char databuf[1];
+    unsigned char data[1];
 
     if(argc != 2){
         printf("Error Usage!\r\n");
@@ -30,18 +27,18 @@ int main(int argc, char *argv[])
     }
 
     while(1) {
-        databuf[0] = atoi("1");
-        retvalue = write(fd, databuf, sizeof(databuf));
-        if(retvalue < 0){
+        data[0] = 1;
+        ret = write(fd, data, sizeof(data));
+        if(ret < 0){
             printf("LED Control Failed!\r\n");
             close(fd);
             return -1;
         }
         usleep(500000);
 
-        databuf[0] = atoi("0");
-        retvalue = write(fd, databuf, sizeof(databuf));
-        if(retvalue < 0){
+        data[0] = 0;
+        ret = write(fd, data, sizeof(data));
+        if(ret < 0){
             printf("LED Control Failed!\r\n");
             close(fd);
             return -1;
@@ -49,11 +46,10 @@ int main(int argc, char *argv[])
         usleep(500000);
     }
 
-    retvalue = close(fd);
-    if(retvalue < 0){
+    ret = close(fd);
+    if(ret < 0){
         printf("file %s close failed!\r\n", argv[1]);
         return -1;
     }
     return 0;
 }
-

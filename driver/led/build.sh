@@ -2,4 +2,4 @@ export PATH=$PATH:/home/asensing/loongson/loongson-gnu-toolchain-8.3-x86_64-loon
 make -j8
 loongarch64-linux-gnu-gcc test.c -o test
 FILE=$PWD/$(basename $PWD).ko
-scp $FILE test root@192.168.137.128:/home/root
+scp $FILE test root@192.168.137.194:/home/root
