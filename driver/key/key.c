@@ -8,14 +8,14 @@
 #include <linux/device.h>
 #include <linux/input.h>
 
-#define KEYINPUT_NAME	"keyinput"
-#define KEYINPUT_NUM	4
+#define KEY_INPUT	"key_input"
+#define KEY_NUM	4
 
 struct my_key_dev{
 	struct input_dev *idev;
 	struct timer_list timer;
-	int key[KEYINPUT_NUM];
-	int irq[KEYINPUT_NUM];	
+	int key[KEY_NUM];
+	int irq[KEY_NUM];	
 	int index;	
 };
 
@@ -82,7 +82,10 @@ static int __init gpio_key_init(void)
 	int ret = 0;
 	int i = 0;
 
-	for(i = 0; i < KEYINPUT_NUM; i++) {
+	// timer
+	timer_setup(&key_dev.timer, key_timer_function, 0);
+
+	for(i = 0; i < KEY_NUM; i++) {
 		// gpio 48 49 50 51
 		key_dev.key[i] = 48 + i;
 
@@ -132,12 +135,9 @@ static int __init gpio_key_init(void)
 		}
 	}
 
-	// timer
-	timer_setup(&key_dev.timer, key_timer_function, 0);
-
 	// input dev
 	key_dev.idev = input_allocate_device();
-	key_dev.idev->name = KEYINPUT_NAME;
+	key_dev.idev->name = KEY_INPUT;
 	key_dev.idev->evbit[0] = BIT_MASK(EV_KEY) | BIT_MASK(EV_REP);
 	input_set_capability(key_dev.idev, EV_KEY, KEY_LEFT | KEY_RIGHT | KEY_UP | KEY_DOWN);
 	ret = input_register_device(key_dev.idev);
@@ -149,7 +149,7 @@ static int __init gpio_key_init(void)
 	return ret;
 
 free_gpio:
-	for(i = 0; i < KEYINPUT_NUM; i++) {
+	for(i = 0; i < KEY_NUM; i++) {
 		free_irq(key_dev.irq[i],NULL);
 		gpio_free(key_dev.key[i]);
 		
@@ -162,7 +162,7 @@ free_gpio:
 static void __exit gpio_key_exit(void)
 {
 	int i;
-	for(i = 0; i < KEYINPUT_NUM; i++) {
+	for(i = 0; i < KEY_NUM; i++) {
 		free_irq(key_dev.irq[i],NULL);
 		gpio_free(key_dev.key[i]);
 	}

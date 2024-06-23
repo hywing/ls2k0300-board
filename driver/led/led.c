@@ -20,7 +20,6 @@ struct my_led_dev{
 	struct device *device;	
 	int major;			
 	int minor;			
-	struct device_node	*nd; 
 	int led;		
 };
 
@@ -87,11 +86,6 @@ static int __init led_init(void)
     if (ret) {
         printk(KERN_ERR "led_dev: Failed to request led-gpio\n");
         return ret;
-	}
-
-	ret = gpio_direction_output(led_dev.led, 1);
-	if(ret < 0) {
-		printk("can't set gpio!\r\n");
 	}
 
 	if (led_dev.major) {		
