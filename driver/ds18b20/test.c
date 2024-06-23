@@ -1,14 +1,3 @@
-/***************************************************************
-Copyright © ALIENTEK Co., Ltd. 1998-2029. All rights reserved.
-文件名		: ds18b20App.c
-作者	  	: 正点原子Linux团队
-版本	   	: V1.0
-描述	   	: ds18b20设备测试APP。
-其他	   	: 无
-使用方法	 ：./ds18b20App /dev/ds18b20
-论坛 	   	: www.openedv.com
-日志	   	: 初版V1.0 2021/08/25 正点原子Linux团队创建
-***************************************************************/
 #include "stdio.h"
 #include "unistd.h"
 #include "sys/types.h"
